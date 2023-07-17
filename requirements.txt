@@ -1,0 +1,17 @@
+# Azure dependancies
+azure-storage-blob
+azure-identity
+azure-ai-ml
+azure-cli
+# Other dependancies
+pillow
+numpy
+opencv-python
+tqdm
+yarrowformat
+pandas
+torch
+torchvision
+
+# Notebooks
+notebook

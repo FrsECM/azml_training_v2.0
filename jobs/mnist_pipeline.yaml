@@ -1,0 +1,66 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+experiment_name: MNIST_Training_Pipeline
+display_name: Train Mnist Model Pipeline
+settings:
+    default_compute: azureml:devtracpucluster
+ 
+inputs:
+  n_max: 1000
+  epochs: 5
+  batch_size: 4
+  learning_rate: 1e-4
+  scheduler_step: 2
+  scheduler_gamma: 0.5
+  data_dir: # As an input for training job
+    type: uri_folder
+    path: azureml://datastores/mnist_data_f296849/paths/
+    mode: ro_mount
+
+outputs:
+  data_dir: # As an output for download job
+    type: uri_folder
+    path: azureml://datastores/mnist_data_f296849/paths/
+    mode: rw_mount
+  output_dir:
+    type: uri_folder
+    path: azureml://datastores/workspaceblobstore/paths/mnist_training
+    mode: rw_mount
+
+jobs:
+  download_mnist:
+    code: ./download_mnist
+    environment: azureml:torch_cpu@latest
+    command: >-
+      python download_mnist.py
+      --data_dir ${{outputs.data_dir}} 
+      --n_max ${{inputs.n_max}} 
+    inputs:
+      n_max: ${{parent.inputs.n_max}}
+    outputs:
+      data_dir: ${{parent.outputs.data_dir}}
+
+  train_mnist:
+    code: ./train_mnist
+    environment: azureml:libaicv_env@latest
+    compute: azureml:devtragpucluster
+    command: >-
+      python train_mnist.py
+      --data_dir ${{inputs.data_dir}} 
+      --output_dir ${{outputs.output_dir}} 
+      --epochs ${{inputs.epochs}} 
+      --batch_size ${{inputs.batch_size}} 
+      --learning_rate ${{inputs.learning_rate}} 
+      --scheduler_step ${{inputs.scheduler_step}}
+      --scheduler_gamma ${{inputs.scheduler_gamma}} 
+    inputs:
+      epochs: ${{parent.inputs.epochs}}
+      batch_size: ${{parent.inputs.batch_size}}
+      learning_rate: ${{parent.inputs.learning_rate}}
+      scheduler_step: ${{parent.inputs.scheduler_step}}
+      scheduler_gamma: ${{parent.inputs.scheduler_gamma}}
+      data_dir: ${{parent.inputs.data_dir}}
+  
+    outputs:
+      output_dir: ${{parent.outputs.output_dir}}

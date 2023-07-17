@@ -1,0 +1,34 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+experiment_name: MNIST_Training
+display_name: Training MNIST
+code: ../../ # Relative from yaml file in order to get the root directory.
+command: >-
+  python jobs/train_mnist/train_mnist.py
+  --data_dir ${{outputs.data_dir}} 
+  --output_dir ${{outputs.output_dir}} 
+  --epochs ${{inputs.epochs}} 
+  --batch_size ${{inputs.batch_size}} 
+  --learning_rate ${{inputs.learning_rate}} 
+  --scheduler_step ${{inputs.scheduler_step}}
+  --scheduler_gamma ${{inputs.scheduler_gamma}} 
+
+inputs:
+  epochs: 5
+  batch_size: 4
+  learning_rate: 1e-4
+  scheduler_step: 2
+  scheduler_gamma: 0.5
+
+outputs:
+  data_dir:
+    type: uri_folder
+    path: azureml://datastores/mnist_data_f296849/paths/
+    mode: rw_mount
+  output_dir:
+    type: uri_folder
+    path: azureml://datastores/workspaceblobstore/paths/mnist_training
+    mode: rw_mount
+
+environment: azureml:libaicv_env@latest
+compute: azureml:devtragpucluster

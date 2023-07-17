@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+experiment_name: MNIST_Download
+display_name: Download MNIST Dataset
+code: ../../ # Relative from yaml file in order to get the root directory.
+command: >-
+  python jobs/download_mnist/download_mnist.py
+  --data_dir ${{outputs.data_dir}} 
+  --n_max ${{inputs.n_max}} 
+
+inputs:
+  n_max: 1000
+
+outputs:
+  data_dir:
+    type: uri_folder
+    path: azureml://datastores/mnist_data_f296849/paths/
+    mode: rw_mount
+
+environment: azureml:torch_cpu@latest
+compute: azureml:devtracpucluster
